@@ -1,0 +1,75 @@
+---
+
+token_file: /root/master-token
+address: 127.0.0.1
+port: 8500
+scheme: https
+cacert: /opt/consul/tls/ca/consul-agent-ca.pem
+cert: /opt/consul/tls/certs/client.pem
+key: /opt/consul/tls/certs/client-key.pem
+
+token_secrets_file: /root/token-secrets.json
+
+members:
+  - name: consul-server-1
+    ip: 10.10.10.11
+    port: 8500
+  - name: consul-server-2
+    ip: 10.10.10.12
+    port: 8500
+  - name: consul-server-3
+    ip: 10.10.10.13
+    port: 8500
+
+node_agent_template: |
+  node "{{.Name}}" {
+    policy = "write"
+  }
+  service_prefix "" {
+    policy = "read"
+  }
+  key_prefix "_rexec" {
+    policy = "write"
+  }
+
+policies:
+  - name: operator-ui
+    description: Allow read access to the UI
+    rules: |
+      service_prefix "" {
+        policy = "read"
+      }
+      key_prefix "" {
+        policy = "read"
+      }
+      node_prefix "" {
+        policy = "read"
+      }
+
+  - name: vault-agent
+    description: Allow write access for Vault
+    rules: |
+      node "" {
+        policy = "write"
+      }
+      service "vault" {
+        policy = "write"
+      }
+      agent "" {
+        policy = "write"
+      }
+      key "vault" {
+        policy = "write"
+      }
+      session "" {
+        policy = "write"
+      }
+
+tokens:
+  - name: operator-ui
+    policies:
+      - operator-ui
+  - name: vault-agent
+    policies:
+      - vault-agent
+
